@@ -13,8 +13,17 @@ import (
 
 const defaultTimeout = 30 * time.Second
 
-// Client is the LLMRouter SDK client. It communicates with the openapi-gateway
-// (for LLM proxy) and the dashboard-gateway (for key/usage management).
+// Client is the LLMRouter SDK client.
+//
+// Initialize with just a base URL and API key — no tenant ID, JWT, or
+// login credentials needed. The server identifies your tenant from the key.
+//
+//	client := llmrouter.NewClient("https://api.llmrouter.io", "lr_live_xxx")
+//
+// The client provides two groups of methods:
+//
+//	Admin:  CreateSubKey, ListSubKeys, RevokeSubKey
+//	LLM:    ChatCompletion, ChatCompletionStream, ProxyRequest
 type Client struct {
 	baseURL    string
 	apiKey     string
@@ -23,8 +32,8 @@ type Client struct {
 
 // NewClient creates a new LLMRouter client.
 //
-//	baseURL is the root URL of the LLMRouter service (e.g. "https://api.llmrouter.example.com").
-//	apiKey  is the bearer token used for authentication.
+//	baseURL is the root URL of the LLMRouter gateway (e.g. "https://api.llmrouter.io").
+//	apiKey  is your API key (lr_live_xxx or lr_sub_xxx).
 func NewClient(baseURL, apiKey string, opts ...Option) *Client {
 	c := &Client{
 		baseURL:    strings.TrimRight(baseURL, "/"),

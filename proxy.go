@@ -7,7 +7,14 @@ import (
 	"net/http"
 )
 
+// --- LLM: Chat Completions ---
+
 // ChatCompletion sends a non-streaming chat completion request.
+//
+//	resp, err := client.ChatCompletion(ctx, &llmrouter.ChatCompletionRequest{
+//	    Model:    "anthropic/claude-sonnet-4",
+//	    Messages: []llmrouter.Message{{Role: "user", Content: "Hello"}},
+//	})
 func (c *Client) ChatCompletion(ctx context.Context, req *ChatCompletionRequest) (*ChatCompletionResponse, error) {
 	req.Stream = false
 
@@ -25,6 +32,13 @@ func (c *Client) ChatCompletion(ctx context.Context, req *ChatCompletionRequest)
 
 // ChatCompletionStream sends a streaming chat completion request and returns a
 // stream reader. The caller must call Close on the returned stream when done.
+//
+//	stream, err := client.ChatCompletionStream(ctx, &llmrouter.ChatCompletionRequest{
+//	    Model:    "anthropic/claude-sonnet-4",
+//	    Messages: []llmrouter.Message{{Role: "user", Content: "Hello"}},
+//	})
+//	defer stream.Close()
+//	for { chunk, err := stream.Recv(); ... }
 func (c *Client) ChatCompletionStream(ctx context.Context, req *ChatCompletionRequest) (*ChatCompletionStream, error) {
 	req.Stream = true
 

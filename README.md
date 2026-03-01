@@ -1,12 +1,14 @@
 # LLMRouter Go SDK
 
-Official Go client for the [LLMRouter](https://github.com/llmrouter-ai) API gateway.
+Official Go client for the [LLMRouter](https://github.com/llmrouter-ai) API gateway — one API key, every LLM provider.
 
 ## Installation
 
 ```bash
 go get github.com/llmrouter/llmrouter-go
 ```
+
+> Requires Go 1.21+. Zero external dependencies.
 
 ## Quick Start
 
@@ -22,13 +24,10 @@ import (
 )
 
 func main() {
-	client := llmrouter.NewClient(
-		"https://api.llmrouter.example.com",
-		"your-api-key",
-	)
+	client := llmrouter.NewClient("https://api.llmrouter.io", "lr_live_xxx")
 
 	resp, err := client.ChatCompletion(context.Background(), &llmrouter.ChatCompletionRequest{
-		Model: "gpt-4o",
+		Model: "anthropic/claude-sonnet-4",
 		Messages: []llmrouter.Message{
 			{Role: "user", Content: "Hello!"},
 		},
@@ -41,20 +40,18 @@ func main() {
 }
 ```
 
-## Features
+## API Overview
 
-- **Chat Completions** — OpenAI-compatible `/v1/chat/completions` with streaming support
-- **Provider Proxy** — forward raw requests to any configured LLM provider
-- **Sub-Key Management** — create, list, and revoke sub-keys programmatically via API key auth
-- **Key Management** — full CRUD + rotation via dashboard gateway (JWT auth)
-- **Usage Tracking** — query usage summaries and time-series data
-- **Error Handling** — structured `APIError` with sentinel errors for `errors.Is` matching
+| Category | Methods |
+|----------|---------|
+| **LLM** | `ChatCompletion`, `ChatCompletionStream`, `ProxyRequest` |
+| **Admin** | `CreateSubKey`, `ListSubKeys`, `RevokeSubKey` |
 
 ## Streaming
 
 ```go
 stream, err := client.ChatCompletionStream(ctx, &llmrouter.ChatCompletionRequest{
-	Model:    "gpt-4o",
+	Model:    "anthropic/claude-sonnet-4",
 	Messages: []llmrouter.Message{{Role: "user", Content: "Tell me a story"}},
 })
 if err != nil {
@@ -76,12 +73,13 @@ for {
 
 ## Sub-Key Management
 
-Sub-keys inherit permissions from a parent key and can be created directly via the API gateway — no dashboard login required.
+Main keys (`lr_live_`) can create scoped sub-keys with provider/model restrictions, rate limits, and quotas — no dashboard login required.
 
 ```go
 sub, err := client.CreateSubKey(ctx, &llmrouter.CreateSubKeyRequest{
-	Name:          "worker-1",
-	AllowedModels: []string{"gpt-4o-mini"},
+	Name:             "worker-1",
+	AllowedProviders: []string{"arouter"},
+	AllowedModels:    []string{"anthropic/claude-sonnet-4"},
 	RateLimit: &llmrouter.RateLimitConfig{
 		RequestsPerMinute: 60,
 	},
@@ -89,7 +87,7 @@ sub, err := client.CreateSubKey(ctx, &llmrouter.CreateSubKeyRequest{
 if err != nil {
 	log.Fatal(err)
 }
-fmt.Println("Sub-key:", sub.RawKey)
+fmt.Println("Sub-key:", sub.RawKey) // lr_sub_xxx
 
 // List all sub-keys
 keys, _ := client.ListSubKeys(ctx, nil)
@@ -103,7 +101,7 @@ _ = client.RevokeSubKey(ctx, sub.Key.ID)
 
 ## Provider Proxy
 
-Forward raw requests to any provider endpoint (embeddings, images, etc.):
+Forward raw requests to any provider endpoint (embeddings, images, audio, etc.):
 
 ```go
 body := strings.NewReader(`{"input": "hello", "model": "text-embedding-3-small"}`)
@@ -113,20 +111,6 @@ if err != nil {
 }
 defer resp.Body.Close()
 // read resp.Body ...
-```
-
-## Usage Tracking
-
-```go
-summary, err := client.GetUsageSummary(ctx, &llmrouter.UsageQuery{
-	StartTime: time.Now().AddDate(0, 0, -7),
-	EndTime:   time.Now(),
-})
-if err != nil {
-	log.Fatal(err)
-}
-fmt.Printf("Requests: %d, Tokens: %d, Cost: $%.4f\n",
-	summary.TotalRequests, summary.TotalTokens, summary.EstimatedCostUSD)
 ```
 
 ## Client Options
@@ -140,7 +124,7 @@ client := llmrouter.NewClient(baseURL, apiKey,
 
 ## Error Handling
 
-All API errors are returned as `*llmrouter.APIError` and can be matched with sentinel errors:
+All API errors are returned as `*llmrouter.APIError` and support `errors.Is` matching:
 
 ```go
 _, err := client.ChatCompletion(ctx, req)
@@ -157,7 +141,7 @@ if errors.As(err, &apiErr) {
 }
 ```
 
-Available sentinel errors: `ErrUnauthorized`, `ErrForbidden`, `ErrNotFound`, `ErrRateLimited`, `ErrQuotaExceeded`, `ErrBadRequest`, `ErrServerError`.
+Sentinel errors: `ErrUnauthorized` · `ErrForbidden` · `ErrNotFound` · `ErrRateLimited` · `ErrQuotaExceeded` · `ErrBadRequest` · `ErrServerError`
 
 ## License
 

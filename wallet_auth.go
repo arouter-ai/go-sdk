@@ -1,9 +1,12 @@
 package arouter
 
 import (
+	"bytes"
 	"crypto/ecdsa"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -96,7 +99,28 @@ func (t *walletAuthTransport) RoundTrip(req *http.Request) (*http.Response, erro
 	}
 
 	ts := time.Now().Unix()
-	msg := fmt.Sprintf("arouter:%d:%s:%s", ts, req.Method, req.URL.Path)
+
+	// Compute body hash for replay protection
+	bodyHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	if req.Body != nil && req.GetBody != nil {
+		bodyReader, _ := req.GetBody()
+		if bodyReader != nil {
+			bodyBytes, _ := io.ReadAll(bodyReader)
+			if len(bodyBytes) > 0 {
+				h := sha256.Sum256(bodyBytes)
+				bodyHash = hex.EncodeToString(h[:])
+			}
+		}
+	} else if req.Body != nil {
+		bodyBytes, _ := io.ReadAll(req.Body)
+		if len(bodyBytes) > 0 {
+			h := sha256.Sum256(bodyBytes)
+			bodyHash = hex.EncodeToString(h[:])
+		}
+		req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+	}
+
+	msg := fmt.Sprintf("arouter:%d:%s:%s:%s", ts, req.Method, req.URL.Path, bodyHash)
 
 	sig, err := t.signer.SignMessage([]byte(msg))
 	if err != nil {

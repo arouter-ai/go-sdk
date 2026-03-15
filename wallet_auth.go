@@ -90,12 +90,9 @@ func wrapWithWalletAuth(client *http.Client, signer WalletSigner) *http.Client {
 }
 
 func (t *walletAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Don't override if Bearer is already set (API key user)
-	if req.Header.Get("Authorization") != "" && req.Header.Get("Authorization") != "Bearer " {
-		auth := req.Header.Get("Authorization")
-		if auth != "Bearer " && auth != "Bearer" {
-			return t.base.RoundTrip(req)
-		}
+	// Don't override if a real Bearer token is already set (API key user)
+	if auth := req.Header.Get("Authorization"); auth != "" && auth != "Bearer " && auth != "Bearer" {
+		return t.base.RoundTrip(req)
 	}
 
 	ts := time.Now().Unix()

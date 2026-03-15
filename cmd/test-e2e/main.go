@@ -16,7 +16,11 @@ import (
 
 func main() {
 	baseURL := envOr("AROUTER_BASE_URL", "http://localhost:18080")
-	keyHex := envOr("AGENT_PRIVATE_KEY", "3b48d05d86c9b7f044d5230eeb9397e0a90ccff8e02ae9f93e0a988dea5e9d8b")
+	keyHex := os.Getenv("AGENT_PRIVATE_KEY")
+	if keyHex == "" {
+		fmt.Fprintln(os.Stderr, "AGENT_PRIVATE_KEY environment variable is required")
+		os.Exit(1)
+	}
 
 	key, err := crypto.HexToECDSA(keyHex)
 	if err != nil {

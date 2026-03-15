@@ -4,6 +4,8 @@ import (
 	"crypto/ecdsa"
 	"encoding/hex"
 	"net/http"
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -31,6 +33,7 @@ func WithX402CoinbasePayment(privateKey *ecdsa.PrivateKey) Option {
 		keyHex := hex.EncodeToString(crypto.FromECDSA(privateKey))
 		evmSigner, err := evmsigners.NewClientSignerFromPrivateKey(keyHex)
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "arouter: WARNING: x402 payment signer init failed: %v (wallet auth still active)\n", err)
 			return
 		}
 
@@ -54,6 +57,7 @@ func WithX402CoinbasePaymentFromHex(hexKey string) Option {
 		hexKey = strings.TrimPrefix(hexKey, "0x")
 		key, err := crypto.HexToECDSA(hexKey)
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "arouter: WARNING: invalid private key: %v\n", err)
 			return
 		}
 		WithX402CoinbasePayment(key)(c)

@@ -3,15 +3,18 @@ package arouter
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/mr-tron/base58"
 )
 
 const walletAuthHeader = "X-Wallet-Auth"
@@ -70,6 +73,24 @@ func (s *EvmWalletSigner) SignMessage(message []byte) ([]byte, error) {
 	return sig, nil
 }
 
+// SolanaWalletSigner implements WalletSigner using an ed25519 private key.
+type SolanaWalletSigner struct {
+	key ed25519.PrivateKey
+}
+
+// NewSolanaWalletSigner creates a signer from an ed25519 private key.
+func NewSolanaWalletSigner(key ed25519.PrivateKey) *SolanaWalletSigner {
+	return &SolanaWalletSigner{key: key}
+}
+
+func (s *SolanaWalletSigner) Address() string {
+	return base58.Encode(s.key.Public().(ed25519.PublicKey))
+}
+
+func (s *SolanaWalletSigner) SignMessage(message []byte) ([]byte, error) {
+	return ed25519.Sign(s.key, message), nil
+}
+
 // walletAuthTransport wraps an HTTP transport to inject X-Wallet-Auth on every request.
 type walletAuthTransport struct {
 	base   http.RoundTripper
@@ -125,8 +146,14 @@ func (t *walletAuthTransport) RoundTrip(req *http.Request) (*http.Response, erro
 	}
 
 	req = req.Clone(req.Context())
-	req.Header.Set(walletAuthHeader, fmt.Sprintf("%s:%d:0x%s", t.signer.Address(), ts, hex.EncodeToString(sig)))
-	// Clear empty Bearer when using wallet auth
+	addr := t.signer.Address()
+	var sigStr string
+	if strings.HasPrefix(addr, "0x") {
+		sigStr = "0x" + hex.EncodeToString(sig)
+	} else {
+		sigStr = base58.Encode(sig)
+	}
+	req.Header.Set(walletAuthHeader, fmt.Sprintf("%s:%d:%s", addr, ts, sigStr))
 	if req.Header.Get("Authorization") == "Bearer " || req.Header.Get("Authorization") == "Bearer" {
 		req.Header.Del("Authorization")
 	}

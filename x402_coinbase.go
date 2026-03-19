@@ -5,8 +5,10 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/mr-tron/base58"
@@ -22,17 +24,16 @@ import (
 // WithX402CoinbasePayment configures the client with Coinbase's official x402 SDK
 // for automatic on-chain USDC payment on EVM networks (Base, Ethereum, etc.).
 //
+// On the first request the gateway returns 402, the x402 SDK signs payment
+// and retries. The response includes an X-API-Key header which is cached
+// and used as Bearer token for all subsequent requests.
+//
 //	key, _ := crypto.HexToECDSA("your-private-key-hex")
 //	client := arouter.NewClient(baseURL, "",
 //	    arouter.WithX402CoinbasePayment(key),
 //	)
-//
-// Sets up both wallet authentication and automatic x402 payment for EVM.
 func WithX402CoinbasePayment(privateKey *ecdsa.PrivateKey) Option {
 	return func(c *Client) {
-		walletSigner := NewEvmWalletSigner(privateKey)
-		WithWalletAuth(walletSigner)(c)
-
 		keyHex := hex.EncodeToString(crypto.FromECDSA(privateKey))
 		evmSigner, err := evmsigners.NewClientSignerFromPrivateKey(keyHex)
 		if err != nil {
@@ -47,6 +48,7 @@ func WithX402CoinbasePayment(privateKey *ecdsa.PrivateKey) Option {
 			c.httpClient,
 			x402http.Newx402HTTPClient(x402Client),
 		)
+		wrapWithAPIKeyCache(c)
 	}
 }
 
@@ -70,13 +72,8 @@ func WithX402CoinbasePaymentFromHex(hexKey string) Option {
 //	client := arouter.NewClient(baseURL, "",
 //	    arouter.WithX402SolanaPayment(solKey),
 //	)
-//
-// Sets up both wallet authentication and automatic x402 payment for Solana.
 func WithX402SolanaPayment(privateKey ed25519.PrivateKey) Option {
 	return func(c *Client) {
-		walletSigner := NewSolanaWalletSigner(privateKey)
-		WithWalletAuth(walletSigner)(c)
-
 		b58Key := base58.Encode(privateKey)
 		svmSigner, err := svmsigners.NewClientSignerFromPrivateKey(b58Key)
 		if err != nil {
@@ -91,15 +88,13 @@ func WithX402SolanaPayment(privateKey ed25519.PrivateKey) Option {
 			c.httpClient,
 			x402http.Newx402HTTPClient(x402Client),
 		)
+		wrapWithAPIKeyCache(c)
 	}
 }
 
 // WithX402DualChainPayment configures both EVM and Solana x402 payment in one call.
 func WithX402DualChainPayment(evmKey *ecdsa.PrivateKey, solKey ed25519.PrivateKey) Option {
 	return func(c *Client) {
-		evmWallet := NewEvmWalletSigner(evmKey)
-		WithWalletAuth(evmWallet)(c)
-
 		keyHex := hex.EncodeToString(crypto.FromECDSA(evmKey))
 		evmSigner, err := evmsigners.NewClientSignerFromPrivateKey(keyHex)
 		if err != nil {
@@ -122,5 +117,49 @@ func WithX402DualChainPayment(evmKey *ecdsa.PrivateKey, solKey ed25519.PrivateKe
 			c.httpClient,
 			x402http.Newx402HTTPClient(x402Client),
 		)
+		wrapWithAPIKeyCache(c)
 	}
+}
+
+// wrapWithAPIKeyCache wraps the client's HTTP transport to cache the X-API-Key
+// header from x402 payment responses and inject it as Bearer token on subsequent requests.
+func wrapWithAPIKeyCache(c *Client) {
+	base := c.httpClient.Transport
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	c.httpClient.Transport = &apiKeyCachingTransport{base: base}
+}
+
+type apiKeyCachingTransport struct {
+	base   http.RoundTripper
+	apiKey string
+	mu     sync.Mutex
+}
+
+func (t *apiKeyCachingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	t.mu.Lock()
+	key := t.apiKey
+	t.mu.Unlock()
+
+	if key != "" {
+		auth := req.Header.Get("Authorization")
+		if auth == "" || auth == "Bearer" || auth == "Bearer " {
+			req = req.Clone(req.Context())
+			req.Header.Set("Authorization", "Bearer "+key)
+		}
+	}
+
+	resp, err := t.base.RoundTrip(req)
+	if err != nil {
+		return resp, err
+	}
+
+	if newKey := resp.Header.Get("X-API-Key"); newKey != "" {
+		t.mu.Lock()
+		t.apiKey = newKey
+		t.mu.Unlock()
+	}
+
+	return resp, err
 }

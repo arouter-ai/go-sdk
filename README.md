@@ -106,6 +106,25 @@ mgmtClient.UpdateKey(ctx, key.Data.Hash, &arouter.UpdateKeyRequest{
 mgmtClient.DeleteKey(ctx, key.Data.Hash)
 ```
 
+## Current Key
+
+Regular API keys (`lr_live_`) can query their own ARouter-compatible usage and limit state via `GET /api/v1/key`.
+
+```go
+client := arouter.NewClient("https://api.arouter.io", "lr_live_xxx")
+
+current, err := client.GetCurrentKey(ctx)
+if err != nil {
+	log.Fatal(err)
+}
+
+fmt.Println("usage:", current.Data.Usage)
+fmt.Println("limit:", current.Data.Limit)
+fmt.Println("limit_remaining:", current.Data.LimitRemaining)
+```
+
+Use `lr_mgmt_` for `/api/v1/keys` management operations, and `lr_live_` for `/api/v1/key` current-key inspection and model calls.
+
 ## Embeddings
 
 ```go

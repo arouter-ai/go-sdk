@@ -13,6 +13,25 @@ import (
 //
 // Endpoint: /api/v1/keys
 
+// GetCurrentKey returns the current regular API key in ARouter-compatible format.
+//
+// This endpoint is authenticated with a regular key (lr_live_), not a management key.
+//
+//	resp, err := client.GetCurrentKey(ctx)
+//	fmt.Println(resp.Data.Usage, resp.Data.Limit, resp.Data.LimitRemaining)
+func (c *Client) GetCurrentKey(ctx context.Context) (*GetCurrentKeyResponse, error) {
+	httpReq, err := c.newRequest(ctx, http.MethodGet, "/api/v1/key", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp GetCurrentKeyResponse
+	if err := c.do(httpReq, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
 // CreateKey creates a new regular API key.
 //
 //	resp, err := client.CreateKey(ctx, &arouter.CreateKeyRequest{

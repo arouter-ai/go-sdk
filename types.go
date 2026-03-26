@@ -115,29 +115,63 @@ type CreateKeyRequest struct {
 
 // CreateKeyResponse is returned when an API key is created.
 type CreateKeyResponse struct {
-	Data   KeyObject `json:"data"`
-	Key    string    `json:"key"`
+	Data KeyObject `json:"data"`
+	Key  string    `json:"key"`
+}
+
+// CurrentKeyRateLimit is the legacy rate-limit object returned by GET /api/v1/key.
+type CurrentKeyRateLimit struct {
+	Requests float64 `json:"requests"`
+	Interval string  `json:"interval"`
+	Note     string  `json:"note"`
+}
+
+// CurrentKeyObject represents the current key returned by GET /api/v1/key.
+type CurrentKeyObject struct {
+	Label              string              `json:"label"`
+	Limit              *float64            `json:"limit"`
+	Usage              float64             `json:"usage"`
+	UsageDaily         float64             `json:"usage_daily"`
+	UsageWeekly        float64             `json:"usage_weekly"`
+	UsageMonthly       float64             `json:"usage_monthly"`
+	ByokUsage          float64             `json:"byok_usage"`
+	ByokUsageDaily     float64             `json:"byok_usage_daily"`
+	ByokUsageWeekly    float64             `json:"byok_usage_weekly"`
+	ByokUsageMonthly   float64             `json:"byok_usage_monthly"`
+	IsFreeTier         bool                `json:"is_free_tier"`
+	IsManagementKey    bool                `json:"is_management_key"`
+	IsProvisioningKey  bool                `json:"is_provisioning_key"`
+	LimitRemaining     *float64            `json:"limit_remaining"`
+	LimitReset         *string             `json:"limit_reset"`
+	IncludeByokInLimit bool                `json:"include_byok_in_limit"`
+	ExpiresAt          *string             `json:"expires_at"`
+	RateLimit          CurrentKeyRateLimit `json:"rate_limit"`
+}
+
+// GetCurrentKeyResponse is returned by GET /api/v1/key.
+type GetCurrentKeyResponse struct {
+	Data CurrentKeyObject `json:"data"`
 }
 
 // KeyObject represents a key in API responses (aligned with ARouter).
 type KeyObject struct {
-	Hash             string          `json:"hash"`
-	Name             string          `json:"name"`
-	Label            string          `json:"label,omitempty"`
-	KeyType          string          `json:"key_type"`
-	Disabled         bool            `json:"disabled"`
-	Limit            *float64        `json:"limit"`
-	LimitRemaining   *float64        `json:"limit_remaining"`
-	LimitReset       string          `json:"limit_reset,omitempty"`
-	AllowedProviders []string        `json:"allowed_providers,omitempty"`
-	AllowedModels    []string        `json:"allowed_models,omitempty"`
-	Usage            float64         `json:"usage"`
-	UsageDaily       float64         `json:"usage_daily"`
-	UsageWeekly      float64         `json:"usage_weekly"`
-	UsageMonthly     float64         `json:"usage_monthly"`
-	CreatedAt        string          `json:"created_at"`
-	UpdatedAt        *string         `json:"updated_at"`
-	ExpiresAt        *string         `json:"expires_at,omitempty"`
+	Hash             string   `json:"hash"`
+	Name             string   `json:"name"`
+	Label            string   `json:"label,omitempty"`
+	KeyType          string   `json:"key_type"`
+	Disabled         bool     `json:"disabled"`
+	Limit            *float64 `json:"limit"`
+	LimitRemaining   *float64 `json:"limit_remaining"`
+	LimitReset       string   `json:"limit_reset,omitempty"`
+	AllowedProviders []string `json:"allowed_providers,omitempty"`
+	AllowedModels    []string `json:"allowed_models,omitempty"`
+	Usage            float64  `json:"usage"`
+	UsageDaily       float64  `json:"usage_daily"`
+	UsageWeekly      float64  `json:"usage_weekly"`
+	UsageMonthly     float64  `json:"usage_monthly"`
+	CreatedAt        string   `json:"created_at"`
+	UpdatedAt        *string  `json:"updated_at"`
+	ExpiresAt        *string  `json:"expires_at,omitempty"`
 }
 
 // UpdateKeyRequest is the payload for updating an API key.
@@ -302,11 +336,11 @@ type TranscriptionRequest struct {
 
 // TranscriptionResponse is the response from POST /v1/audio/transcriptions.
 type TranscriptionResponse struct {
-	Text     string               `json:"text"`
-	Task     string               `json:"task,omitempty"`
-	Language string               `json:"language,omitempty"`
-	Duration float64              `json:"duration,omitempty"`
-	Words    []TranscriptionWord  `json:"words,omitempty"`
+	Text     string                 `json:"text"`
+	Task     string                 `json:"task,omitempty"`
+	Language string                 `json:"language,omitempty"`
+	Duration float64                `json:"duration,omitempty"`
+	Words    []TranscriptionWord    `json:"words,omitempty"`
 	Segments []TranscriptionSegment `json:"segments,omitempty"`
 }
 
@@ -353,14 +387,14 @@ type TranslationResponse struct {
 
 // Legacy types kept for backward compat in internal usage
 type APIKeyInfo struct {
-	ID               string          `json:"id"`
-	Prefix           string          `json:"prefix,omitempty"`
-	Name             string          `json:"name"`
-	KeyType          string          `json:"key_type,omitempty"`
-	Disabled         bool            `json:"disabled,omitempty"`
-	AllowedProviders []string        `json:"allowed_providers,omitempty"`
-	AllowedModels    []string        `json:"allowed_models,omitempty"`
+	ID               string           `json:"id"`
+	Prefix           string           `json:"prefix,omitempty"`
+	Name             string           `json:"name"`
+	KeyType          string           `json:"key_type,omitempty"`
+	Disabled         bool             `json:"disabled,omitempty"`
+	AllowedProviders []string         `json:"allowed_providers,omitempty"`
+	AllowedModels    []string         `json:"allowed_models,omitempty"`
 	RateLimit        *RateLimitConfig `json:"rate_limit,omitempty"`
-	ExpiresAt        *string         `json:"expires_at,omitempty"`
-	CreatedAt        json.RawMessage `json:"created_at,omitempty"`
+	ExpiresAt        *string          `json:"expires_at,omitempty"`
+	CreatedAt        json.RawMessage  `json:"created_at,omitempty"`
 }

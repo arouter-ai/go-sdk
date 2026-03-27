@@ -398,3 +398,79 @@ type APIKeyInfo struct {
 	ExpiresAt        *string          `json:"expires_at,omitempty"`
 	CreatedAt        json.RawMessage  `json:"created_at,omitempty"`
 }
+
+// ==================== Webhook Destination Types ====================
+
+// Destination represents a webhook delivery destination, aligned with ARouter's broadcast webhook model.
+type Destination struct {
+	ID           string            `json:"id"`
+	UID          string            `json:"uid,omitempty"`
+	Name         string            `json:"name"`
+	URL          string            `json:"url"`
+	Method       string            `json:"method"` // "POST" | "PUT"
+	Headers      map[string]string `json:"headers,omitempty"`
+	PrivacyMode  bool              `json:"privacy_mode"`
+	SamplingRate float64           `json:"sampling_rate"` // 0-1; 0 = unset (treated as 1)
+	APIKeyIDs    []string          `json:"api_key_ids,omitempty"`
+	EventTypes   []string          `json:"event_types,omitempty"`
+	Disabled     bool              `json:"disabled"`
+	CreatedAt    string            `json:"created_at,omitempty"`
+	UpdatedAt    string            `json:"updated_at,omitempty"`
+}
+
+// CreateDestinationRequest is the payload for creating a new webhook destination.
+type CreateDestinationRequest struct {
+	Name         string            `json:"name"`
+	URL          string            `json:"url"`
+	Method       string            `json:"method,omitempty"`        // "POST" | "PUT"; defaults to "POST"
+	Headers      map[string]string `json:"headers,omitempty"`
+	PrivacyMode  bool              `json:"privacy_mode,omitempty"`
+	SamplingRate float64           `json:"sampling_rate,omitempty"`
+	APIKeyIDs    []string          `json:"api_key_ids,omitempty"`
+	EventTypes   []string          `json:"event_types,omitempty"`
+}
+
+// UpdateDestinationRequest is the payload for updating an existing webhook destination.
+// All fields are optional; omitted fields are left unchanged.
+type UpdateDestinationRequest struct {
+	Name         *string           `json:"name,omitempty"`
+	URL          *string           `json:"url,omitempty"`
+	Method       *string           `json:"method,omitempty"`
+	Headers      map[string]string `json:"headers,omitempty"`
+	PrivacyMode  *bool             `json:"privacy_mode,omitempty"`
+	SamplingRate *float64          `json:"sampling_rate,omitempty"`
+	APIKeyIDs    []string          `json:"api_key_ids,omitempty"`
+	EventTypes   []string          `json:"event_types,omitempty"`
+	Disabled     *bool             `json:"disabled,omitempty"`
+}
+
+// CreateDestinationResponse is the response when a destination is successfully created.
+// The Secret is only returned once and must be stored by the caller.
+type CreateDestinationResponse struct {
+	Endpoint Destination `json:"endpoint"`
+	Secret   string      `json:"secret"`
+}
+
+// ListDestinationsResponse is the response for listing all webhook destinations.
+type ListDestinationsResponse struct {
+	Data []Destination `json:"data"`
+}
+
+// TestConnectionRequest probes a URL for reachability without requiring an existing destination.
+type TestConnectionRequest struct {
+	URL     string            `json:"url"`
+	Method  string            `json:"method,omitempty"` // defaults to "POST"
+	Headers map[string]string `json:"headers,omitempty"`
+}
+
+// TestConnectionResponse reports the outcome of a connection probe.
+type TestConnectionResponse struct {
+	Reachable  bool   `json:"reachable"`
+	StatusCode int    `json:"status_code,omitempty"`
+	Error      string `json:"error,omitempty"`
+}
+
+// SendTestEventRequest specifies which destination should receive a test event.
+type SendTestEventRequest struct {
+	EndpointID string `json:"endpoint_id"`
+}

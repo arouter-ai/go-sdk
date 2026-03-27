@@ -47,6 +47,7 @@ func main() {
 | **LLM** | `ChatCompletion`, `ChatCompletionStream`, `CreateEmbedding`, `ListModels`, `ProxyRequest` |
 | **Keys** | `CreateKey`, `ListKeys`, `UpdateKey`, `DeleteKey` |
 | **Usage** | `GetUsageSummary`, `GetUsageTimeSeries` |
+| **Webhooks** | `CreateDestination`, `ListDestinations`, `GetDestination`, `UpdateDestination`, `DeleteDestination`, `RotateDestinationSecret`, `TestConnection`, `SendTestEvent` |
 
 ## Streaming
 
@@ -151,6 +152,48 @@ summary, err := client.GetUsageSummary(ctx, &arouter.UsageQuery{
 	EndTime:   "2025-01-31T23:59:59Z",
 })
 fmt.Println(summary) // Requests: 1234 | Tokens: 56789 | Cost: $1.23
+```
+
+## Webhook Destinations
+
+Manage webhook destinations to receive real-time usage traces for every LLM request routed through ARouter.
+Aligned with OpenRouter's broadcast webhook model.
+
+```go
+ctx := context.Background()
+
+// Create a destination
+resp, err := client.CreateDestination(ctx, &arouter.CreateDestinationRequest{
+    Name:         "Production Monitoring",
+    URL:          "https://hooks.example.com/arouter",
+    Method:       "POST",
+    PrivacyMode:  false,   // set true to redact key_name / failure_reason
+    SamplingRate: 1.0,     // 0-1; 1 = all traces
+    // APIKeyIDs: []string{"key_abc"}, // restrict to specific keys
+})
+// resp.Secret is returned once — store it for signature verification.
+
+// List all destinations
+list, _ := client.ListDestinations(ctx)
+for _, d := range list.Data {
+    fmt.Printf("- %s (%s)\n", d.Name, d.URL)
+}
+
+// Test connection before saving
+probe, _ := client.TestConnection(ctx, &arouter.TestConnectionRequest{
+    URL:    "https://hooks.example.com/arouter",
+    Method: "POST",
+})
+fmt.Println("reachable:", probe.Reachable)
+
+// Send a test event to an existing destination
+_ = client.SendTestEvent(ctx, &arouter.SendTestEventRequest{
+    EndpointID: resp.Endpoint.ID,
+})
+
+// Rotate the signing secret
+newSecret, _ := client.RotateDestinationSecret(ctx, resp.Endpoint.ID)
+fmt.Println("new secret:", newSecret)
 ```
 
 ## Provider Proxy

@@ -27,7 +27,7 @@ func main() {
 	client := arouter.NewClient("https://api.arouter.io", "lr_live_xxx")
 
 	resp, err := client.ChatCompletion(context.Background(), &arouter.ChatCompletionRequest{
-		Model: "openrouter/anthropic/claude-sonnet-4",
+		Model: "anthropic/claude-sonnet-4",
 		Messages: []arouter.Message{
 			{Role: "user", Content: "Hello!"},
 		},
@@ -53,7 +53,7 @@ func main() {
 
 ```go
 stream, err := client.ChatCompletionStream(ctx, &arouter.ChatCompletionRequest{
-	Model:    "openrouter/anthropic/claude-sonnet-4",
+	Model:    "anthropic/claude-sonnet-4",
 	Messages: []arouter.Message{{Role: "user", Content: "Tell me a story"}},
 })
 if err != nil {
@@ -109,7 +109,7 @@ mgmtClient.DeleteKey(ctx, key.Data.Hash)
 
 ## Current Key
 
-Regular API keys (`lr_live_`) can query their own OpenRouter-compatible usage and limit state via `GET /api/v1/key`.
+Regular API keys (`lr_live_`) can query their own usage and limit state via `GET /api/v1/key`.
 
 ```go
 client := arouter.NewClient("https://api.arouter.io", "lr_live_xxx")
@@ -157,7 +157,7 @@ fmt.Println(summary) // Requests: 1234 | Tokens: 56789 | Cost: $1.23
 ## Webhook Destinations
 
 Manage webhook destinations to receive real-time usage traces for every LLM request routed through ARouter.
-Aligned with OpenRouter's broadcast webhook model.
+Designed for broadcast-style webhook delivery.
 
 ```go
 ctx := context.Background()

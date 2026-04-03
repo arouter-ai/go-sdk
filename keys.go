@@ -6,14 +6,14 @@ import (
 	"net/http"
 )
 
-// --- Key Management API (aligned with ARouter) ---
+// --- Key Management API ---
 //
 // These methods require a Management Key (lr_mgmt_) for authentication.
 // Regular API keys (lr_live_) are for LLM calls only.
 //
 // Endpoint: /api/v1/keys
 
-// GetCurrentKey returns the current regular API key in ARouter-compatible format.
+// GetCurrentKey returns the current regular API key metadata.
 //
 // This endpoint is authenticated with a regular key (lr_live_), not a management key.
 //

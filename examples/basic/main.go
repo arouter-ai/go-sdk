@@ -22,16 +22,16 @@ func main() {
 	fmt.Println("=== ARouter SDK Integration Test ===")
 	fmt.Println()
 
-	// Test 1: ARouter via ChatCompletion (OpenAI-compatible)
-	fmt.Println("[Test 1] ARouter - ChatCompletion (google/gemini-2.0-flash-001)")
+	// Test 1: ChatCompletion via the unified interface
+	fmt.Println("[Test 1] ChatCompletion (google/gemini-2.0-flash-001)")
 	testChatCompletion(client, "google/gemini-2.0-flash-001")
 
-	// Test 2: ARouter streaming
-	fmt.Println("[Test 2] ARouter - Streaming ChatCompletion")
+	// Test 2: Streaming chat completion
+	fmt.Println("[Test 2] Streaming ChatCompletion")
 	testStreamingCompletion(client, "google/gemini-2.0-flash-001")
 
-	// Test 3: Direct proxy to ARouter
-	fmt.Println("[Test 3] Direct proxy to arouter")
+	// Test 3: Direct proxy request
+	fmt.Println("[Test 3] Direct proxy request")
 	testProxyRequest(client)
 
 	fmt.Println()
@@ -106,14 +106,14 @@ func testProxyRequest(client *arouter.Client) {
 	defer cancel()
 
 	payload, _ := json.Marshal(map[string]interface{}{
-		"model":      "google/gemini-2.0-flash-001",
+		"model":      "gpt-4o-mini",
 		"messages": []map[string]string{
 			{"role": "user", "content": "What is 2+2? Reply with just the number."},
 		},
 		"max_tokens": 10,
 	})
 
-	resp, err := client.ProxyRequest(ctx, "arouter", "v1/chat/completions", bytes.NewReader(payload))
+	resp, err := client.ProxyRequest(ctx, "openai", "v1/chat/completions", bytes.NewReader(payload))
 	if err != nil {
 		log.Printf("  FAIL: %v\n\n", err)
 		return

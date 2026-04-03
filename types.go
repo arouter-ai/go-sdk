@@ -101,7 +101,7 @@ type ChatCompletionChunk struct {
 	Usage   *Usage   `json:"usage,omitempty"`
 }
 
-// ==================== Key Management Types (aligned with ARouter) ====================
+// ==================== Key Management Types ====================
 
 // CreateKeyRequest is the payload for creating an API key via the management API.
 type CreateKeyRequest struct {
@@ -153,7 +153,7 @@ type GetCurrentKeyResponse struct {
 	Data CurrentKeyObject `json:"data"`
 }
 
-// KeyObject represents a key in API responses (aligned with ARouter).
+// KeyObject represents a key in API responses.
 type KeyObject struct {
 	Hash             string   `json:"hash"`
 	Name             string   `json:"name"`
@@ -401,7 +401,7 @@ type APIKeyInfo struct {
 
 // ==================== Webhook Destination Types ====================
 
-// Destination represents a webhook delivery destination, aligned with ARouter's broadcast webhook model.
+// Destination represents a webhook delivery destination.
 type Destination struct {
 	ID           string            `json:"id"`
 	UID          string            `json:"uid,omitempty"`

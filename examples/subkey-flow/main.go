@@ -40,7 +40,7 @@ func main() {
 		Name:             fmt.Sprintf("GoSDK-%d", time.Now().Unix()),
 		Limit:            &limit,
 		LimitReset:       "monthly",
-		AllowedProviders: []string{"arouter"},
+		AllowedProviders: []string{"anthropic", "google", "openai"},
 	})
 	if err != nil {
 		fmt.Printf("  FAIL: %v\n", err)

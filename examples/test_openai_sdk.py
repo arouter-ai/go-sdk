@@ -2,7 +2,7 @@
 """
 ARouter transparent proxy test using the standard OpenAI SDK.
 
-Demonstrates that any OpenAI-compatible SDK (including ARouter's)
+Demonstrates that any OpenAI-compatible SDK
 can connect to arouter by simply swapping base_url and api_key.
 
 Supports testing with both main keys (lr_live_) and subkeys (lr_sub_).

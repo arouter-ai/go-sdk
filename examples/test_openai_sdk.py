@@ -31,10 +31,10 @@ SUBKEYS = {
 }
 
 MODELS = [
-    "anthropic/claude-sonnet-4",
-    "anthropic/claude-3.5-sonnet",
-    "google/gemini-2.0-flash-001",
-    "openai/gpt-4o-mini",
+    "anthropic/claude-sonnet-4.6",
+    "google/gemini-2.5-flash",
+    "openai/gpt-5.4",
+    "deepseek/deepseek-v3.2",
 ]
 
 

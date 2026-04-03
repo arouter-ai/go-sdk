@@ -27,7 +27,7 @@ func main() {
 	client := arouter.NewClient("https://api.arouter.io", "lr_live_xxx")
 
 	resp, err := client.ChatCompletion(context.Background(), &arouter.ChatCompletionRequest{
-		Model: "anthropic/claude-sonnet-4",
+		Model: "anthropic/claude-sonnet-4.6",
 		Messages: []arouter.Message{
 			{Role: "user", Content: "Hello!"},
 		},
@@ -53,7 +53,7 @@ func main() {
 
 ```go
 stream, err := client.ChatCompletionStream(ctx, &arouter.ChatCompletionRequest{
-	Model:    "anthropic/claude-sonnet-4",
+	Model:    "anthropic/claude-sonnet-4.6",
 	Messages: []arouter.Message{{Role: "user", Content: "Tell me a story"}},
 })
 if err != nil {
@@ -83,7 +83,7 @@ mgmtClient := arouter.NewClient("https://api.arouter.io", "lr_mgmt_xxx")
 key, err := mgmtClient.CreateKey(ctx, &arouter.CreateKeyRequest{
 	Name:             "worker-1",
 	AllowedProviders: []string{"openai", "anthropic"},
-	AllowedModels:    []string{"gpt-4o", "claude-sonnet-4-20250514"},
+	AllowedModels:    []string{"gpt-5.4", "claude-sonnet-4.6"},
 	Limit:            float64Ptr(150),
 	LimitReset:       "monthly",
 })

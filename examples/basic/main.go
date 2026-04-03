@@ -23,12 +23,12 @@ func main() {
 	fmt.Println()
 
 	// Test 1: ChatCompletion via the unified interface
-	fmt.Println("[Test 1] ChatCompletion (google/gemini-2.0-flash-001)")
-	testChatCompletion(client, "google/gemini-2.0-flash-001")
+	fmt.Println("[Test 1] ChatCompletion (google/gemini-2.5-flash)")
+	testChatCompletion(client, "google/gemini-2.5-flash")
 
 	// Test 2: Streaming chat completion
 	fmt.Println("[Test 2] Streaming ChatCompletion")
-	testStreamingCompletion(client, "google/gemini-2.0-flash-001")
+	testStreamingCompletion(client, "google/gemini-2.5-flash")
 
 	// Test 3: Direct proxy request
 	fmt.Println("[Test 3] Direct proxy request")
@@ -106,7 +106,7 @@ func testProxyRequest(client *arouter.Client) {
 	defer cancel()
 
 	payload, _ := json.Marshal(map[string]interface{}{
-		"model":      "gpt-4o-mini",
+		"model":      "gpt-5.4-mini",
 		"messages": []map[string]string{
 			{"role": "user", "content": "What is 2+2? Reply with just the number."},
 		},

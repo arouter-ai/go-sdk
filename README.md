@@ -109,7 +109,7 @@ mgmtClient.DeleteKey(ctx, key.Data.Hash)
 
 ## Current Key
 
-Regular API keys (`lr_live_`) can query their own ARouter-compatible usage and limit state via `GET /api/v1/key`.
+Regular API keys (`lr_live_`) can query their own usage and limit state via `GET /api/v1/key`.
 
 ```go
 client := arouter.NewClient("https://api.arouter.io", "lr_live_xxx")
@@ -157,7 +157,7 @@ fmt.Println(summary) // Requests: 1234 | Tokens: 56789 | Cost: $1.23
 ## Webhook Destinations
 
 Manage webhook destinations to receive real-time usage traces for every LLM request routed through ARouter.
-Aligned with ARouter's broadcast webhook model.
+Designed for broadcast-style webhook delivery.
 
 ```go
 ctx := context.Background()
